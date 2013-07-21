@@ -1,0 +1,50 @@
+diff --git a/src/server/game/Entities/Item/ItemPrototype.h b/src/server/game/Entities/Item/ItemPrototype.h
+index 5fc49c9..e44e87a 100644
+--- a/src/server/game/Entities/Item/ItemPrototype.h
++++ b/src/server/game/Entities/Item/ItemPrototype.h
+@@ -662,6 +662,7 @@ struct ItemTemplate
+     uint32 MinMoneyLoot;
+     uint32 MaxMoneyLoot;
+     uint32 FlagsCu;
++  uint32 vipLevel;
+ 
+     // helpers
+     bool CanChangeEquipStateInCombat() const
+diff --git a/src/server/game/Entities/Player/Player.cpp b/src/server/game/Entities/Player/Player.cpp
+index 2b39045..d23ee8d 100644
+--- a/src/server/game/Entities/Player/Player.cpp
++++ b/src/server/game/Entities/Player/Player.cpp
+@@ -11507,6 +11511,10 @@ InventoryResult Player::CanEquipItem(uint8 slot, uint16 &dest, Item* pItem, bool
+         ItemTemplate const* pProto = pItem->GetTemplate();
+         if (pProto)
+         {
++  	uint32 IvipLevel = pProto->vipLevel;
++		uint32 PvipLevel = GetSession()->GetSecurity()
++		if(IvipLevel  > PvipLevel)
++		{
++			// can't equip item if vip level higher than your GM rank
++			return EQUIP_ERR_YOU_CAN_NEVER_USE_THAT_ITEM;
++ 		}
+             // item used
+             if (pItem->m_lootGenerated)
+                 return EQUIP_ERR_ALREADY_LOOTED;
+diff --git a/src/server/game/Globals/ObjectMgr.cpp b/src/server/game/Globals/ObjectMgr.cpp
+index 1191bc4..c6dda00 100644
+--- a/src/server/game/Globals/ObjectMgr.cpp
++++ b/src/server/game/Globals/ObjectMgr.cpp
+@@ -2152,7 +2152,7 @@ void ObjectMgr::LoadItemTemplates()
+     //                                            126                 127                     128            129            130            131         132         133
+                                              "GemProperties, RequiredDisenchantSkill, ArmorDamageModifier, duration, ItemLimitCategory, HolidayId, ScriptName, DisenchantID, "
+     //                                           134        135            136
+-                                             "FoodType, minMoneyLoot, maxMoneyLoot, flagsCustom FROM item_template");
++                                             "FoodType, minMoneyLoot, maxMoneyLoot, flagsCustom, vipLevel FROM item_template");
+ 
+     if (!result)
+     {
+@@ -2277,6 +2277,7 @@ void ObjectMgr::LoadItemTemplates()
+         itemTemplate.MinMoneyLoot            = fields[135].GetUInt32();
+         itemTemplate.MaxMoneyLoot            = fields[136].GetUInt32();
+         itemTemplate.FlagsCu                 = fields[137].GetUInt32();
++		itemTemplate.vipLevel                = fields[138].GetUInt32();
+ 
+         // Checks
